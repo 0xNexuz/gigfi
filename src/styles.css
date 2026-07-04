@@ -60,15 +60,51 @@ textarea {
   font-weight: 800;
 }
 
-.brand-mark {
+.logo-lockup {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.logo-mark {
+  position: relative;
   display: grid;
-  height: 36px;
-  width: 36px;
+  height: 38px;
+  width: 38px;
   place-items: center;
+  border: 1px solid rgba(255, 255, 255, .18);
   border-radius: 8px;
-  background: #14b8a6;
+  background:
+    radial-gradient(circle at 68% 22%, rgba(253, 230, 138, .34), transparent 24%),
+    linear-gradient(145deg, #14b8a6, #0f766e);
+  box-shadow: 0 14px 30px rgba(20, 184, 166, .32), inset 0 1px 0 rgba(255, 255, 255, .22);
+}
+
+.logo-orbit {
+  position: absolute;
+  height: 20px;
+  width: 20px;
+  border: 2px solid rgba(255, 255, 255, .92);
+  border-right-color: transparent;
+  border-radius: 999px;
+}
+
+.logo-cut {
+  position: absolute;
+  right: 9px;
+  bottom: 10px;
+  height: 9px;
+  width: 13px;
+  border-radius: 2px;
+  background: #f59e0b;
+  box-shadow: -7px -8px 0 -4px rgba(255, 255, 255, .9);
+}
+
+.logo-word {
   color: #fff;
-  box-shadow: 0 12px 28px rgba(20, 184, 166, .3);
+  font-size: 19px;
+  font-weight: 850;
+  letter-spacing: -.01em;
 }
 
 .nav-links {

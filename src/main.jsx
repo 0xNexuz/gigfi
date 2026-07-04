@@ -230,8 +230,7 @@ function SiteNav() {
   return (
     <nav className="site-nav">
       <a className="brand-lockup" href="/" aria-label="GigFi home">
-        <span className="brand-mark">G</span>
-        <span>GigFi</span>
+        <Logo />
       </a>
       <div className="nav-links" aria-label="Primary navigation">
         <a href="/#demo">Demo</a>
@@ -243,6 +242,18 @@ function SiteNav() {
         Try flow <ArrowRight size={15} />
       </a>
     </nav>
+  );
+}
+
+function Logo() {
+  return (
+    <span className="logo-lockup" aria-label="GigFi">
+      <span className="logo-mark" aria-hidden="true">
+        <span className="logo-orbit" />
+        <span className="logo-cut" />
+      </span>
+      <span className="logo-word">GigFi</span>
+    </span>
   );
 }
 
@@ -800,8 +811,7 @@ function SiteFooter() {
     <footer className="site-footer">
       <div>
         <span className="brand-lockup">
-          <span className="brand-mark">G</span>
-          <span>GigFi</span>
+          <Logo />
         </span>
         <p>Smart escrow, offline acceptance, and milestone payouts for informal service work.</p>
       </div>
