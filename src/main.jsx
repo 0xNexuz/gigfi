@@ -87,6 +87,7 @@ function App() {
   const [apiState, setApiState] = useState('idle');
   const [lastEscrow, setLastEscrow] = useState(null);
   const [payoutBurst, setPayoutBurst] = useState(null);
+  const [editingJob, setEditingJob] = useState(null);
 
   const selectedJob = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) ?? jobs[0],
@@ -113,6 +114,29 @@ function App() {
       setApiState('success');
       window.setTimeout(() => setApiState('idle'), 3600);
     }, 900);
+  }
+
+  function updateEscrow(form) {
+    if (!editingJob) return;
+    setJobs((current) =>
+      current.map((job) =>
+        job.id === editingJob.id
+          ? {
+              ...job,
+              artisan: form.artisan,
+              phone: form.phone,
+              job: form.description,
+              amount: Number(form.amount),
+              wallet: `ALAT Wallet - ${form.artisan.split(' ')[0] || 'Artisan'}`,
+            }
+          : job,
+      ),
+    );
+    setSelectedJobId(editingJob.id);
+    setLastEscrow(null);
+    setEditingJob(null);
+    setApiState('updated');
+    window.setTimeout(() => setApiState('idle'), 2600);
   }
 
   function acceptJob(jobId, reply) {
@@ -187,7 +211,10 @@ function App() {
             <ClientDashboard
               apiState={apiState}
               lastEscrow={lastEscrow}
+              editingJob={editingJob}
               onCreateEscrow={createEscrow}
+              onUpdateEscrow={updateEscrow}
+              onCancelEdit={() => setEditingJob(null)}
             />
             <ArtisanSimulator
               job={selectedJob}
@@ -199,11 +226,12 @@ function App() {
           </div>
 
           <EscrowLedger
-            jobs={jobs}
-            payoutBurst={payoutBurst}
-            onMarkCompleted={markCompleted}
-            onReleaseFunds={releaseFunds}
-          />
+          jobs={jobs}
+          payoutBurst={payoutBurst}
+          onEditJob={setEditingJob}
+          onMarkCompleted={markCompleted}
+          onReleaseFunds={releaseFunds}
+        />
         </section>
 
         <WorkflowSection />
@@ -343,13 +371,23 @@ function Metric({ icon, label, value }) {
   );
 }
 
-function ClientDashboard({ apiState, lastEscrow, onCreateEscrow }) {
+function ClientDashboard({ apiState, lastEscrow, editingJob, onCreateEscrow, onUpdateEscrow, onCancelEdit }) {
   const [form, setForm] = useState({
     artisan: 'Tunde Adewale',
     phone: '0802 945 1020',
     description: 'Build and install wooden shop counter',
     amount: '150000',
   });
+
+  React.useEffect(() => {
+    if (!editingJob) return;
+    setForm({
+      artisan: editingJob.artisan,
+      phone: editingJob.phone,
+      description: editingJob.job,
+      amount: String(editingJob.amount),
+    });
+  }, [editingJob]);
 
   function updateField(field, value) {
     setForm((current) => ({ ...current, [field]: value }));
@@ -358,6 +396,10 @@ function ClientDashboard({ apiState, lastEscrow, onCreateEscrow }) {
   function submit(event) {
     event.preventDefault();
     if (!form.artisan || !form.phone || !form.description || !form.amount) return;
+    if (editingJob) {
+      onUpdateEscrow(form);
+      return;
+    }
     onCreateEscrow(form);
   }
 
@@ -366,8 +408,8 @@ function ClientDashboard({ apiState, lastEscrow, onCreateEscrow }) {
       <PanelTitle
         icon={<BriefcaseBusiness size={18} />}
         kicker="Client dashboard"
-        title="Create a new gig"
-        copy="Mock wallet creation and virtual escrow account provisioning through ALAT sandbox services."
+        title={editingJob ? `Edit ${editingJob.id}` : 'Create a new gig'}
+        copy={editingJob ? 'Update the escrow details before payout. Paid jobs stay locked for audit history.' : 'Mock wallet creation and virtual escrow account provisioning through ALAT sandbox services.'}
       />
 
       <form className="mt-6 grid gap-4" onSubmit={submit}>
@@ -390,8 +432,13 @@ function ClientDashboard({ apiState, lastEscrow, onCreateEscrow }) {
 
         <button className="premium-button mt-2" type="submit" disabled={apiState === 'loading'}>
           {apiState === 'loading' ? <Loader2 className="animate-spin" size={18} /> : <WalletCards size={18} />}
-          Generate Escrow & Notify Artisan
+          {editingJob ? 'Save Escrow Changes' : 'Generate Escrow & Notify Artisan'}
         </button>
+        {editingJob ? (
+          <button className="ghost-button" type="button" onClick={onCancelEdit}>
+            Cancel edit
+          </button>
+        ) : null}
       </form>
 
       <div className="mt-5 min-h-[122px] rounded-lg border border-white/10 bg-[#041211]/80 p-4">
@@ -399,7 +446,11 @@ function ClientDashboard({ apiState, lastEscrow, onCreateEscrow }) {
           <RadioTower className="text-amber-200" size={17} />
           ALAT API Sandbox Trace
         </div>
-        {apiState === 'success' && lastEscrow ? (
+        {apiState === 'updated' ? (
+          <div className="text-sm leading-6 text-teal-100">
+            Escrow details updated. The ledger and artisan simulator are now using the latest job terms.
+          </div>
+        ) : apiState === 'success' && lastEscrow ? (
           <div className="grid gap-2 text-sm text-slate-300 sm:grid-cols-2">
             <Trace label="Virtual account" value={lastEscrow.virtualAccount} />
             <Trace label="Escrow wallet" value={lastEscrow.wallet} />
@@ -528,7 +579,7 @@ function ArtisanSimulator({ job, jobs, selectedJobId, onSelectJob, onAcceptJob }
   );
 }
 
-function EscrowLedger({ jobs, payoutBurst, onMarkCompleted, onReleaseFunds }) {
+function EscrowLedger({ jobs, payoutBurst, onEditJob, onMarkCompleted, onReleaseFunds }) {
   return (
     <section className="glass-panel relative overflow-hidden p-5 sm:p-6">
       {payoutBurst ? (
@@ -573,6 +624,11 @@ function EscrowLedger({ jobs, payoutBurst, onMarkCompleted, onReleaseFunds }) {
               {job.status === 'Accepted' ? (
                 <button className="table-action" onClick={() => onMarkCompleted(job.id)} type="button">
                   Mark complete
+                </button>
+              ) : null}
+              {job.status !== 'Paid' ? (
+                <button className="table-action" onClick={() => onEditJob(job)} type="button">
+                  Edit
                 </button>
               ) : null}
               {job.status === 'Completed' ? (
