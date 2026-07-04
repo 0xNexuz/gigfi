@@ -1,6 +1,6 @@
 # GigFi
 
-GigFi is an offline-first smart invoicing and milestone escrow prototype for Africa's informal workforce, created for Wema Bank Hackaholics 7.0.
+GigFi is an offline-first smart invoicing and milestone escrow prototype for Africa's informal workforce.
 
 ## What is included
 

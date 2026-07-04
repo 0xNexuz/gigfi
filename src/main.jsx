@@ -4,6 +4,7 @@ import {
   ArrowRight,
   BanknoteArrowUp,
   BadgeCheck,
+  BookOpenText,
   BriefcaseBusiness,
   Building2,
   Check,
@@ -80,6 +81,7 @@ function makeVirtualAccount() {
 }
 
 function App() {
+  const isDocsPage = window.location.pathname === '/docs';
   const [jobs, setJobs] = useState(seedJobs);
   const [selectedJobId, setSelectedJobId] = useState(seedJobs[2].id);
   const [apiState, setApiState] = useState('idle');
@@ -151,6 +153,19 @@ function App() {
     .filter((job) => job.status === 'Paid')
     .reduce((sum, job) => sum + job.amount, 0);
 
+  if (isDocsPage) {
+    return (
+      <main className="min-h-screen overflow-hidden bg-[#02110f] text-slate-50">
+        <AmbientBackground />
+        <div className="relative mx-auto w-full max-w-[1520px] px-4 py-5 sm:px-6 lg:px-8">
+          <SiteNav />
+          <DocsPage />
+          <SiteFooter />
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#02110f] text-slate-50">
       <AmbientBackground />
@@ -195,6 +210,7 @@ function App() {
         <IntegrationSection />
         <UseCaseSection />
         <ClosingCta />
+        <SiteFooter />
       </div>
     </main>
   );
@@ -213,17 +229,17 @@ function AmbientBackground() {
 function SiteNav() {
   return (
     <nav className="site-nav">
-      <a className="brand-lockup" href="#top" aria-label="GigFi home">
+      <a className="brand-lockup" href="/" aria-label="GigFi home">
         <span className="brand-mark">G</span>
         <span>GigFi</span>
       </a>
       <div className="nav-links" aria-label="Primary navigation">
-        <a href="#demo">Demo</a>
-        <a href="#workflow">Workflow</a>
-        <a href="#integration">ALAT Mock</a>
-        <a href="#cta">Pitch</a>
+        <a href="/#demo">Demo</a>
+        <a href="/#workflow">Workflow</a>
+        <a href="/#integration">API Mock</a>
+        <a href="/docs">Docs</a>
       </div>
-      <a className="nav-cta" href="#demo">
+      <a className="nav-cta" href="/#demo">
         Try flow <ArrowRight size={15} />
       </a>
     </nav>
@@ -239,7 +255,7 @@ function Hero({ lockedValue, paidValue }) {
             <span className="grid size-8 place-items-center rounded-full border border-teal-300/25 bg-teal-400/15">
               <ShieldCheck size={16} />
             </span>
-            Wema Bank Hackaholics 7.0 / Powering Possibilities
+            Smart escrow for everyday service work
           </div>
           <h1 className="text-5xl font-semibold leading-[.98] tracking-normal text-white sm:text-7xl lg:text-8xl">
             Protected payouts for informal work.
@@ -381,7 +397,7 @@ function ClientDashboard({ apiState, lastEscrow, onCreateEscrow }) {
           </div>
         ) : (
           <div className="text-sm leading-6 text-slate-400">
-            Waiting for escrow request. The demo will provision a Wema escrow virtual account, lock the job value, and
+            Waiting for escrow request. The demo will provision a GigFi escrow virtual account, lock the job value, and
             push an offline acceptance message.
           </div>
         )}
@@ -457,12 +473,12 @@ function ArtisanSimulator({ job, jobs, selectedJobId, onSelectJob, onAcceptJob }
           <div className="phone-speaker" />
           <div className="phone-screen">
             <div className="mb-3 flex items-center justify-between border-b border-black/10 pb-2 text-[11px] font-semibold text-[#1b2938]">
-              <span>WEMA ESCROW</span>
+              <span>GIGFI ESCROW</span>
               <span>*945#</span>
             </div>
             <div className="chat-bubble">
               You have been hired for <b>{job?.job}</b> for <b>{currency(job?.amount ?? 0)}</b>. The client has
-              locked the funds in a Wema Escrow. Reply <b>1</b> or dial <b>*945*X#</b> to accept.
+              locked the funds in a GigFi Escrow. Reply <b>1</b> or dial <b>*945*X#</b> to accept.
             </div>
             {job?.status !== 'Pending' ? (
               <div className="chat-bubble chat-bubble-out">1</div>
@@ -607,7 +623,7 @@ function IntegrationSection() {
   return (
     <section id="integration" className="site-section integration-section">
       <div className="integration-copy">
-        <span className="eyebrow"><Network size={16} /> Wema / ALAT integration mock</span>
+        <span className="eyebrow"><Network size={16} /> Banking API integration mock</span>
         <h2>Three banking rails, one demo narrative.</h2>
         <p>
           The prototype visualizes wallet creation, escrow virtual accounts, and instant funds transfer with sandbox-style traces.
@@ -676,7 +692,7 @@ function UseCaseSection() {
 function ClosingCta() {
   return (
     <section id="cta" className="closing-cta">
-      <span className="eyebrow"><Clock3 size={16} /> Hackathon pitch ready</span>
+      <span className="eyebrow"><Clock3 size={16} /> Product demo ready</span>
       <h2>Turn the demo into a story judges can click through.</h2>
       <p>
         Start at the client dashboard, create a gig, reply 1 as the artisan, mark the job complete, then release funds.
@@ -685,6 +701,118 @@ function ClosingCta() {
         Run the escrow flow <ArrowRight size={18} />
       </a>
     </section>
+  );
+}
+
+function DocsPage() {
+  const liveItems = [
+    ['Client gig creation', 'Create a gig, amount, job description, and artisan contact.'],
+    ['Escrow account mock', 'Generates a virtual account and sandbox trace for each new job.'],
+    ['Offline acceptance', 'Artisan simulator accepts reply 1 through a feature-phone style flow.'],
+    ['Ledger updates', 'Pending, Accepted, Completed, and Paid states update in real time.'],
+    ['Payout mock', 'Release Funds simulates a bank transfer and triggers a success animation.'],
+  ];
+
+  const notYetItems = [
+    ['Real ALAT credentials', 'Current banking calls are sandbox-style UI mocks only.'],
+    ['Identity verification', 'BVN/NIN, KYC, and wallet ownership checks are not wired yet.'],
+    ['Dispute workflow', 'A hold, evidence, and mediation journey is planned for the next iteration.'],
+    ['SMS/USSD gateway', 'Messages are simulated in-browser, not sent through a telecom provider.'],
+    ['Persistent backend', 'Data resets on refresh because the prototype uses local React state.'],
+  ];
+
+  return (
+    <section className="docs-shell">
+      <div className="docs-hero">
+        <span className="eyebrow"><BookOpenText size={16} /> Product docs</span>
+        <h1>How GigFi works, what is live, and what comes next.</h1>
+        <p>
+          This page explains the prototype flow clearly for reviewers, partners, and technical judges.
+        </p>
+        <a className="premium-link" href="/#demo">
+          Open live demo <ArrowRight size={18} />
+        </a>
+      </div>
+
+      <div className="docs-grid">
+        <DocPanel
+          title="How the app works"
+          copy="GigFi converts informal service jobs into simple escrow-backed records."
+          items={[
+            'Client enters artisan details, job description, and payment amount.',
+            'GigFi mocks a banking API call to create a virtual escrow account.',
+            'The artisan receives a simple acceptance prompt that works like SMS or USSD.',
+            'The ledger tracks job status until the client releases the completed payout.',
+          ]}
+        />
+        <DocPanel
+          title="Demo script"
+          copy="Use this path for a quick product walkthrough."
+          items={[
+            'Click Launch prototype or Try flow.',
+            'Create a gig from the client dashboard.',
+            'Type 1 in the phone simulator and submit.',
+            'Mark the job complete, then release funds from the ledger.',
+          ]}
+        />
+      </div>
+
+      <div className="status-columns">
+        <StatusList title="Live in this prototype" items={liveItems} tone="live" />
+        <StatusList title="Not live yet" items={notYetItems} tone="planned" />
+      </div>
+    </section>
+  );
+}
+
+function DocPanel({ title, copy, items }) {
+  return (
+    <article className="doc-panel">
+      <h2>{title}</h2>
+      <p>{copy}</p>
+      <ol>
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </ol>
+    </article>
+  );
+}
+
+function StatusList({ title, items, tone }) {
+  return (
+    <article className={`status-list status-list-${tone}`}>
+      <h2>{title}</h2>
+      <div className="status-items">
+        {items.map(([label, copy]) => (
+          <div className="status-item" key={label}>
+            <span>{label}</span>
+            <p>{copy}</p>
+          </div>
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function SiteFooter() {
+  return (
+    <footer className="site-footer">
+      <div>
+        <span className="brand-lockup">
+          <span className="brand-mark">G</span>
+          <span>GigFi</span>
+        </span>
+        <p>Smart escrow, offline acceptance, and milestone payouts for informal service work.</p>
+      </div>
+      <div className="footer-links">
+        <a href="/docs">Docs</a>
+        <a href="https://github.com/0xNexuz/gigfi" target="_blank" rel="noreferrer">
+          <span aria-hidden="true">GH</span>
+          GitHub
+        </a>
+      </div>
+    </footer>
   );
 }
 
