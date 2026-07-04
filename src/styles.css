@@ -283,6 +283,61 @@ textarea {
   line-height: 1.55;
 }
 
+.auth-panel {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(300px, .55fr);
+  gap: 18px;
+  align-items: stretch;
+  margin-top: 18px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 8px;
+  background: linear-gradient(145deg, rgba(20, 184, 166, .12), rgba(255, 255, 255, .035));
+  padding: clamp(22px, 4vw, 34px);
+}
+
+.auth-panel h2,
+.market-section h2 {
+  max-width: 850px;
+  color: #fff;
+  font-size: clamp(30px, 4vw, 52px);
+  font-weight: 650;
+  line-height: 1.04;
+}
+
+.auth-panel p,
+.market-section p {
+  max-width: 700px;
+  margin: 12px 0 0;
+  color: rgb(148 163 184);
+  line-height: 1.7;
+}
+
+.auth-card {
+  display: grid;
+  gap: 12px;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .22);
+  padding: 18px;
+}
+
+.auth-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, .08);
+  padding-bottom: 10px;
+}
+
+.auth-row span {
+  color: rgb(148 163 184);
+}
+
+.auth-row b {
+  color: #fff;
+  text-align: right;
+}
+
 .site-section {
   position: relative;
   margin-top: clamp(44px, 7vw, 96px);
@@ -497,6 +552,67 @@ textarea {
 
 .closing-cta .premium-link {
   margin-top: 26px;
+}
+
+.dispute-center {
+  margin-top: 18px;
+  padding: 24px;
+}
+
+.dispute-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 20px;
+}
+
+.dispute-card,
+.dispute-empty {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 8px;
+  background: rgba(0, 0, 0, .2);
+  padding: 18px;
+}
+
+.dispute-card p,
+.dispute-empty {
+  color: rgb(148 163 184);
+  line-height: 1.65;
+}
+
+.dispute-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 14px 0;
+}
+
+.dispute-meta span {
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 999px;
+  padding: 6px 9px;
+  color: rgb(226 232 240);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.market-section {
+  display: grid;
+  grid-template-columns: minmax(0, .9fr) minmax(340px, .7fr);
+  gap: 22px;
+  align-items: center;
+  border: 1px solid rgba(255, 255, 255, .1);
+  border-radius: 8px;
+  background:
+    radial-gradient(circle at 82% 16%, rgba(245, 158, 11, .11), transparent 28%),
+    linear-gradient(135deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .025));
+  padding: clamp(24px, 5vw, 52px);
+}
+
+.market-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .docs-shell {
@@ -921,10 +1037,14 @@ textarea {
   }
 
   .proof-strip,
+  .auth-panel,
   .workflow-grid,
   .integration-section,
   .integration-grid,
   .usecase-section,
+  .market-section,
+  .market-grid,
+  .dispute-grid,
   .docs-grid,
   .status-columns {
     grid-template-columns: 1fr;

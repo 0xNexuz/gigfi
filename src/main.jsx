@@ -21,6 +21,7 @@ import {
   Split,
   WalletCards,
 } from 'lucide-react';
+import { createEscrowAccount, transferFunds } from './integrations/alat';
 import './styles.css';
 
 const seedJobs = [
@@ -56,10 +57,29 @@ const seedJobs = [
   },
 ];
 
+const storage = {
+  get(key, fallback) {
+    try {
+      const saved = window.localStorage.getItem(key);
+      return saved ? JSON.parse(saved) : fallback;
+    } catch {
+      return fallback;
+    }
+  },
+  set(key, value) {
+    try {
+      window.localStorage.setItem(key, JSON.stringify(value));
+    } catch {
+      // Local persistence is best-effort for the browser prototype.
+    }
+  },
+};
+
 const statusStyles = {
   Pending: 'border-amber-300/20 bg-amber-300/10 text-amber-100',
   Accepted: 'border-sky-300/20 bg-sky-300/10 text-sky-100',
   Completed: 'border-emerald-300/20 bg-emerald-300/10 text-emerald-100',
+  Disputed: 'border-orange-300/25 bg-orange-400/15 text-orange-100',
   Paid: 'border-teal-300/25 bg-teal-400/15 text-teal-100',
 };
 
@@ -75,14 +95,18 @@ function makeJobId() {
   return `GFI-${Math.floor(2400 + Math.random() * 700)}`;
 }
 
-function makeVirtualAccount() {
-  const block = () => Math.floor(100 + Math.random() * 899);
-  return `945-${block()}-${Math.floor(1000 + Math.random() * 8999)}`;
-}
-
 function App() {
   const isDocsPage = window.location.pathname === '/docs';
-  const [jobs, setJobs] = useState(seedJobs);
+  const [jobs, setJobs] = useState(() => storage.get('gigfi.jobs', seedJobs));
+  const [user, setUser] = useState(() =>
+    storage.get('gigfi.user', {
+      name: 'Demo Client',
+      phone: '0800 945 0000',
+      kyc: 'Pending',
+      wallet: 'Demo wallet not verified',
+    }),
+  );
+  const [disputes, setDisputes] = useState(() => storage.get('gigfi.disputes', []));
   const [selectedJobId, setSelectedJobId] = useState(seedJobs[2].id);
   const [apiState, setApiState] = useState('idle');
   const [lastEscrow, setLastEscrow] = useState(null);
@@ -94,9 +118,14 @@ function App() {
     [jobs, selectedJobId],
   );
 
-  function createEscrow(form) {
+  React.useEffect(() => storage.set('gigfi.jobs', jobs), [jobs]);
+  React.useEffect(() => storage.set('gigfi.user', user), [user]);
+  React.useEffect(() => storage.set('gigfi.disputes', disputes), [disputes]);
+
+  async function createEscrow(form) {
     setApiState('loading');
-    window.setTimeout(() => {
+    try {
+      const escrow = await createEscrowAccount(form);
       const newJob = {
         id: makeJobId(),
         artisan: form.artisan,
@@ -104,8 +133,8 @@ function App() {
         job: form.description,
         amount: Number(form.amount),
         status: 'Pending',
-        virtualAccount: makeVirtualAccount(),
-        wallet: `ALAT Wallet - ${form.artisan.split(' ')[0] || 'Artisan'}`,
+        virtualAccount: escrow.virtualAccount,
+        wallet: escrow.wallet,
       };
 
       setJobs((current) => [newJob, ...current]);
@@ -113,7 +142,10 @@ function App() {
       setLastEscrow(newJob);
       setApiState('success');
       window.setTimeout(() => setApiState('idle'), 3600);
-    }, 900);
+    } catch {
+      setApiState('error');
+      window.setTimeout(() => setApiState('idle'), 3600);
+    }
   }
 
   function updateEscrow(form) {
@@ -139,6 +171,15 @@ function App() {
     window.setTimeout(() => setApiState('idle'), 2600);
   }
 
+  function verifyDemoUser() {
+    setUser({
+      name: 'Demo Client',
+      phone: '0800 945 0000',
+      kyc: 'Verified',
+      wallet: 'GigFi Client Wallet - Verified',
+    });
+  }
+
   function acceptJob(jobId, reply) {
     if (reply.trim() !== '1' || !jobId) return false;
     setJobs((current) => {
@@ -162,12 +203,53 @@ function App() {
     );
   }
 
-  function releaseFunds(jobId) {
+  async function releaseFunds(jobId) {
+    const job = jobs.find((item) => item.id === jobId);
+    if (!job) return;
+    await transferFunds({ amount: job.amount, wallet: job.wallet });
     setJobs((current) =>
       current.map((job) => (job.id === jobId ? { ...job, status: 'Paid' } : job)),
     );
     setPayoutBurst(jobId);
     window.setTimeout(() => setPayoutBurst(null), 1600);
+  }
+
+  function openDispute(jobId) {
+    const job = jobs.find((item) => item.id === jobId);
+    if (!job || job.status === 'Paid') return;
+    const exists = disputes.some((dispute) => dispute.jobId === jobId && dispute.status === 'Open');
+    if (exists) return;
+
+    setDisputes((current) => [
+      {
+        id: `DSP-${Math.floor(1000 + Math.random() * 8999)}`,
+        jobId,
+        artisan: job.artisan,
+        amount: job.amount,
+        reason: 'Client says the milestone needs review before payout.',
+        status: 'Open',
+      },
+      ...current,
+    ]);
+    setJobs((current) =>
+      current.map((item) => (item.id === jobId ? { ...item, status: 'Disputed' } : item)),
+    );
+  }
+
+  function resolveDispute(disputeId) {
+    const dispute = disputes.find((item) => item.id === disputeId);
+    if (!dispute) return;
+
+    setDisputes((current) =>
+      current.map((item) =>
+        item.id === disputeId
+          ? { ...item, status: 'Resolved', resolution: 'Milestone approved after review' }
+          : item,
+      ),
+    );
+    setJobs((current) =>
+      current.map((item) => (item.id === dispute.jobId ? { ...item, status: 'Completed' } : item)),
+    );
   }
 
   const lockedValue = jobs
@@ -197,6 +279,7 @@ function App() {
         <SiteNav />
         <Hero lockedValue={lockedValue} paidValue={paidValue} />
         <ProofStrip />
+        <AuthKycPanel user={user} onVerify={verifyDemoUser} />
 
         <section id="demo" className="site-section">
           <div className="section-heading">
@@ -226,17 +309,20 @@ function App() {
           </div>
 
           <EscrowLedger
-          jobs={jobs}
-          payoutBurst={payoutBurst}
-          onEditJob={setEditingJob}
-          onMarkCompleted={markCompleted}
-          onReleaseFunds={releaseFunds}
-        />
+            jobs={jobs}
+            payoutBurst={payoutBurst}
+            onEditJob={setEditingJob}
+            onOpenDispute={openDispute}
+            onMarkCompleted={markCompleted}
+            onReleaseFunds={releaseFunds}
+          />
+          <DisputeCenter disputes={disputes} onResolveDispute={resolveDispute} />
         </section>
 
         <WorkflowSection />
         <IntegrationSection />
         <UseCaseSection />
+        <MarketSection />
         <ClosingCta />
         <SiteFooter />
       </div>
@@ -359,6 +445,43 @@ function ProofStrip() {
   );
 }
 
+function AuthKycPanel({ user, onVerify }) {
+  const verified = user.kyc === 'Verified';
+
+  return (
+    <section id="trust" className="auth-panel">
+      <div>
+        <span className="eyebrow"><ShieldCheck size={16} /> Trust and identity layer</span>
+        <h2>Client session, wallet readiness, and KYC status are visible before payout.</h2>
+        <p>
+          The prototype simulates authentication and verification so judges can see where customer onboarding fits before live bank credentials are connected.
+        </p>
+      </div>
+      <div className="auth-card">
+        <div className="auth-row">
+          <span>Signed in as</span>
+          <b>{user.name}</b>
+        </div>
+        <div className="auth-row">
+          <span>Phone</span>
+          <b>{user.phone}</b>
+        </div>
+        <div className="auth-row">
+          <span>KYC</span>
+          <b className={verified ? 'text-teal-200' : 'text-amber-200'}>{user.kyc}</b>
+        </div>
+        <div className="auth-row">
+          <span>Wallet</span>
+          <b>{user.wallet}</b>
+        </div>
+        <button className="premium-button w-full" onClick={onVerify} type="button" disabled={verified}>
+          {verified ? 'Identity Verified' : 'Verify Demo Identity'}
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function Metric({ icon, label, value }) {
   return (
     <div className="rounded-lg border border-white/10 bg-white/[.055] p-4 shadow-2xl shadow-black/20">
@@ -446,7 +569,11 @@ function ClientDashboard({ apiState, lastEscrow, editingJob, onCreateEscrow, onU
           <RadioTower className="text-amber-200" size={17} />
           ALAT API Sandbox Trace
         </div>
-        {apiState === 'updated' ? (
+        {apiState === 'error' ? (
+          <div className="text-sm leading-6 text-amber-100">
+            Banking adapter could not complete the request. In live mode, add server-side ALAT credentials and API routes.
+          </div>
+        ) : apiState === 'updated' ? (
           <div className="text-sm leading-6 text-teal-100">
             Escrow details updated. The ledger and artisan simulator are now using the latest job terms.
           </div>
@@ -579,7 +706,7 @@ function ArtisanSimulator({ job, jobs, selectedJobId, onSelectJob, onAcceptJob }
   );
 }
 
-function EscrowLedger({ jobs, payoutBurst, onEditJob, onMarkCompleted, onReleaseFunds }) {
+function EscrowLedger({ jobs, payoutBurst, onEditJob, onOpenDispute, onMarkCompleted, onReleaseFunds }) {
   return (
     <section className="glass-panel relative overflow-hidden p-5 sm:p-6">
       {payoutBurst ? (
@@ -637,11 +764,67 @@ function EscrowLedger({ jobs, payoutBurst, onEditJob, onMarkCompleted, onRelease
                   Release Funds
                 </button>
               ) : null}
+              {job.status !== 'Paid' && job.status !== 'Disputed' ? (
+                <button className="table-action" onClick={() => onOpenDispute(job.id)} type="button">
+                  Dispute
+                </button>
+              ) : null}
+              {job.status === 'Disputed' ? <span className="text-xs text-orange-200">In review</span> : null}
               {job.status === 'Paid' ? <span className="paid-mark">Paid to {job.wallet}</span> : null}
               {job.status === 'Pending' ? <span className="text-xs text-slate-500">Awaiting artisan reply</span> : null}
             </span>
           </div>
         ))}
+      </div>
+    </section>
+  );
+}
+
+function DisputeCenter({ disputes, onResolveDispute }) {
+  return (
+    <section className="glass-panel dispute-center">
+      <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+        <PanelTitle
+          icon={<ReceiptText size={18} />}
+          kicker="Dispute resolution"
+          title="Hold, review, resolve"
+          copy="A short mediation loop shows how disputed milestones can pause payout until both sides have clarity."
+        />
+        <span className="status-pill border-orange-300/25 bg-orange-400/15 text-orange-100">
+          {disputes.filter((item) => item.status === 'Open').length} open
+        </span>
+      </div>
+
+      <div className="dispute-grid">
+        {disputes.length ? (
+          disputes.map((dispute) => (
+            <article className="dispute-card" key={dispute.id}>
+              <div className="flex items-center justify-between gap-3">
+                <b>{dispute.id}</b>
+                <span className={`status-pill ${dispute.status === 'Open' ? 'border-orange-300/25 bg-orange-400/15 text-orange-100' : 'border-teal-300/25 bg-teal-400/15 text-teal-100'}`}>
+                  {dispute.status}
+                </span>
+              </div>
+              <p>{dispute.reason}</p>
+              <div className="dispute-meta">
+                <span>{dispute.jobId}</span>
+                <span>{dispute.artisan}</span>
+                <span>{currency(dispute.amount)}</span>
+              </div>
+              {dispute.status === 'Open' ? (
+                <button className="table-action table-action-primary" onClick={() => onResolveDispute(dispute.id)} type="button">
+                  Resolve and approve
+                </button>
+              ) : (
+                <span className="paid-mark">{dispute.resolution}</span>
+              )}
+            </article>
+          ))
+        ) : (
+          <article className="dispute-empty">
+            No disputes yet. Use the ledger Dispute action to pause a job and review the milestone before payout.
+          </article>
+        )}
       </div>
     </section>
   );
@@ -756,6 +939,26 @@ function UseCaseSection() {
   );
 }
 
+function MarketSection() {
+  return (
+    <section className="site-section market-section">
+      <div className="market-copy">
+        <span className="eyebrow"><Building2 size={16} /> Market story</span>
+        <h2>A large offline workforce needs payment trust, not another complicated app.</h2>
+        <p>
+          GigFi focuses on informal service work where jobs are frequent, records are thin, and payment trust is the bottleneck. The first wedge is artisan services and market errands, then expansion into repeat SME procurement and field-service payouts.
+        </p>
+      </div>
+      <div className="market-grid">
+        <Metric icon={<ShieldCheck size={18} />} label="Primary wedge" value="Artisans" />
+        <Metric icon={<MessageSquareText size={18} />} label="Access channel" value="SMS/USSD" />
+        <Metric icon={<LockKeyhole size={18} />} label="Trust product" value="Escrow" />
+        <Metric icon={<BanknoteArrowUp size={18} />} label="Revenue path" value="Payout fee" />
+      </div>
+    </section>
+  );
+}
+
 function ClosingCta() {
   return (
     <section id="cta" className="closing-cta">
@@ -773,19 +976,23 @@ function ClosingCta() {
 
 function DocsPage() {
   const liveItems = [
+    ['Demo persistence', 'Jobs, KYC state, and disputes persist in browser storage.'],
+    ['KYC simulation', 'Client verification and wallet readiness are shown in the trust panel.'],
     ['Client gig creation', 'Create a gig, amount, job description, and artisan contact.'],
     ['Escrow account mock', 'Generates a virtual account and sandbox trace for each new job.'],
     ['Offline acceptance', 'Artisan simulator accepts reply 1 through a feature-phone style flow.'],
     ['Ledger updates', 'Pending, Accepted, Completed, and Paid states update in real time.'],
+    ['Dispute flow', 'Open a dispute, hold the job, resolve the review, then release payout.'],
     ['Payout mock', 'Release Funds simulates a bank transfer and triggers a success animation.'],
+    ['ALAT adapter layer', 'Banking behavior is isolated in an integration module for future live routes.'],
   ];
 
   const notYetItems = [
-    ['Real ALAT credentials', 'Current banking calls are sandbox-style UI mocks only.'],
-    ['Identity verification', 'BVN/NIN, KYC, and wallet ownership checks are not wired yet.'],
-    ['Dispute workflow', 'A hold, evidence, and mediation journey is planned for the next iteration.'],
+    ['Real ALAT credentials', 'Current banking calls use the adapter mock until live credentials and server-side routes are supplied.'],
+    ['Managed backend database', 'Browser storage is live; Supabase, Neon, or Firebase credentials are needed for a shared backend.'],
+    ['Real identity checks', 'BVN/NIN, KYC, and wallet ownership are simulated, not connected to verification providers.'],
     ['SMS/USSD gateway', 'Messages are simulated in-browser, not sent through a telecom provider.'],
-    ['Persistent backend', 'Data resets on refresh because the prototype uses local React state.'],
+    ['Admin operations', 'Role-based dashboards and audit exports are planned after real backend setup.'],
   ];
 
   return (
@@ -809,6 +1016,7 @@ function DocsPage() {
             'Client enters artisan details, job description, and payment amount.',
             'GigFi mocks a banking API call to create a virtual escrow account.',
             'The artisan receives a simple acceptance prompt that works like SMS or USSD.',
+            'A disputed milestone can be held, reviewed, and approved before payout.',
             'The ledger tracks job status until the client releases the completed payout.',
           ]}
         />
