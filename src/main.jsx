@@ -279,7 +279,7 @@ function App() {
         <SiteNav />
         <Hero lockedValue={lockedValue} paidValue={paidValue} />
         <ProofStrip />
-        <AuthKycPanel user={user} onVerify={verifyDemoUser} />
+        <ReferenceFeatureSections />
 
         <section id="demo" className="site-section">
           <div className="section-heading">
@@ -319,6 +319,7 @@ function App() {
           <DisputeCenter disputes={disputes} onResolveDispute={resolveDispute} />
         </section>
 
+        <AuthKycPanel user={user} onVerify={verifyDemoUser} />
         <WorkflowSection />
         <IntegrationSection />
         <UseCaseSection />
@@ -447,6 +448,148 @@ function ProofStrip() {
         </div>
       ))}
     </section>
+  );
+}
+
+function ReferenceFeatureSections() {
+  return (
+    <section className="reference-story" aria-label="GigFi product benefits">
+      <FeatureBand
+        title="Escrow fee-free for everyday gigs"
+        copy="Create protected job payments for carpenters, plumbers, and market runners with a virtual escrow record for every job."
+        link="Learn about GigFi Escrow"
+        visual={<EscrowCardVisual />}
+      />
+      <FeatureBand
+        flip
+        title="Artisans get paid when the work is accepted"
+        copy="A worker can reply 1 by SMS, WhatsApp, or USSD. No smartphone onboarding, no app-store friction."
+        link="Learn about offline acceptance"
+        visual={<NotificationVisual />}
+      />
+      <FeatureBand
+        title="Say goodbye to hidden disputes"
+        copy="A job can be held, reviewed, and approved before payout. Every milestone keeps the terms visible."
+        link="Learn about dispute holds"
+        visual={<FeesVisual />}
+      />
+      <FeatureBand
+        flip
+        title="A new way to build trust"
+        copy="KYC status, wallet readiness, job history, and payout state sit in one clean trust layer."
+        link="Learn about trust scoring"
+        visual={<TrustCardVisual />}
+      />
+      <FeatureBand
+        title="Pay anyone the fast, protected way"
+        copy="Release completed milestones from the ledger and simulate an instant transfer into the artisan wallet."
+        link="Learn about payout rails"
+        visual={<PhonePayVisual />}
+      />
+      <FeatureBand
+        flip
+        title="Make job records work harder"
+        copy="Every job creates a reusable receipt trail for repeat hiring, dispute review, and future financing signals."
+        link="Learn about job records"
+        visual={<ApyVisual />}
+      />
+      <FeatureBand
+        title="Stay in control with alerts"
+        copy="Clients can track accepted, completed, disputed, and paid jobs from one lightweight ledger."
+        link="Learn about job alerts"
+        visual={<AlertVisual />}
+      />
+      <FeatureBand
+        flip
+        title="Security & support you can trust"
+        copy="The prototype separates mocked bank calls into an adapter layer, so real credentials can move server-side later."
+        link="Read the docs"
+        visual={<SecurityVisual />}
+      />
+    </section>
+  );
+}
+
+function FeatureBand({ title, copy, link, visual, flip = false }) {
+  return (
+    <article className={`feature-band ${flip ? 'feature-band-flip' : ''}`}>
+      <div className="feature-copy">
+        <h2>{title}</h2>
+        <p>{copy}</p>
+        <a href={link === 'Read the docs' ? '/docs' : '/#demo'}>{link} <ArrowRight size={13} /></a>
+      </div>
+      <div className="feature-visual">{visual}</div>
+    </article>
+  );
+}
+
+function EscrowCardVisual() {
+  return (
+    <div className="mini-bank-card white-card">
+      <Logo />
+      <span>VIRTUAL ESCROW</span>
+      <b>NGN 150,000</b>
+      <small>Locked until milestone approval</small>
+    </div>
+  );
+}
+
+function NotificationVisual() {
+  return (
+    <div className="notification-card">
+      <span>GIGFI</span>
+      <p>Your ₦45,000 job with Musa was accepted by SMS.</p>
+    </div>
+  );
+}
+
+function FeesVisual() {
+  return <div className="fees-script">Disputes</div>;
+}
+
+function TrustCardVisual() {
+  return (
+    <div className="mini-bank-card green-card">
+      <Logo />
+      <span>TRUST CARD</span>
+      <b>KYC ready</b>
+      <small>Wallet linked • Jobs recorded</small>
+    </div>
+  );
+}
+
+function PhonePayVisual() {
+  return (
+    <div className="phone-pay-visual">
+      <div className="pay-phone">
+        <span>Paid</span>
+        <b>THANKS</b>
+        <small>Transfer successful</small>
+      </div>
+      <div className="pay-note">₦</div>
+    </div>
+  );
+}
+
+function ApyVisual() {
+  return <div className="apy-visual">1<span> Job ID</span></div>;
+}
+
+function AlertVisual() {
+  return (
+    <div className="alert-stack">
+      <div><span>Acceptance alerts</span><b /></div>
+      <div><span>Dispute alerts</span><b /></div>
+    </div>
+  );
+}
+
+function SecurityVisual() {
+  return (
+    <div className="security-visual">
+      <div className="lock-body" />
+      <div className="lock-loop" />
+    </div>
   );
 }
 
