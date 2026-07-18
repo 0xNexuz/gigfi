@@ -386,9 +386,9 @@ function Hero({ lockedValue, paidValue }) {
             GigFi gives clients smart invoices and milestone escrow while artisans accept jobs on phones they already own.
           </p>
           <div className="hero-action-row">
-            <label className="hero-email" aria-label="Demo email">
-              <input placeholder="Enter your email" defaultValue="" />
-            </label>
+            <div className="hero-logo-chip" aria-label="GigFi logo">
+              <Logo />
+            </div>
             <a className="premium-link" href="#demo">
               Launch Demo <ArrowRight size={18} />
             </a>

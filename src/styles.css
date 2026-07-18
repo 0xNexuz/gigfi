@@ -1530,19 +1530,20 @@ body {
   max-width: 430px;
 }
 
-.hero-email {
-  flex: 1;
-}
-
-.hero-email input {
-  width: 100%;
+.hero-logo-chip {
+  display: inline-flex;
   min-height: 44px;
-  border: 0;
+  min-width: 170px;
+  align-items: center;
+  justify-content: center;
   border-radius: 999px;
   background: #fff;
-  color: var(--gigfi-ink);
-  outline: 0;
   padding: 0 18px;
+  box-shadow: 0 18px 44px rgba(0, 0, 0, .12);
+}
+
+.hero-logo-chip .logo-word {
+  color: var(--gigfi-green);
 }
 
 .ghost-link {
