@@ -261,9 +261,9 @@ function App() {
 
   if (isDocsPage) {
     return (
-      <main className="min-h-screen overflow-hidden bg-[#02110f] text-slate-50">
+      <main className="min-h-screen overflow-hidden bg-white text-[#263238]">
         <AmbientBackground />
-        <div className="relative mx-auto w-full max-w-[1520px] px-4 py-5 sm:px-6 lg:px-8">
+        <div className="relative mx-auto w-full max-w-[1520px]">
           <SiteNav />
           <DocsPage />
           <SiteFooter />
@@ -273,9 +273,9 @@ function App() {
   }
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#02110f] text-slate-50">
+    <main className="min-h-screen overflow-hidden bg-white text-[#263238]">
       <AmbientBackground />
-      <div className="relative mx-auto w-full max-w-[1520px] px-4 py-5 sm:px-6 lg:px-8">
+      <div className="relative mx-auto w-full max-w-[1520px]">
         <SiteNav />
         <Hero lockedValue={lockedValue} paidValue={paidValue} />
         <ProofStrip />
@@ -332,11 +332,7 @@ function App() {
 
 function AmbientBackground() {
   return (
-    <div className="pointer-events-none fixed inset-0">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_12%,rgba(20,184,166,.26),transparent_28%),radial-gradient(circle_at_82%_3%,rgba(245,158,11,.16),transparent_30%),linear-gradient(135deg,#02110f_0%,#071617_46%,#030807_100%)]" />
-      <div className="absolute inset-0 opacity-[.14] [background-image:linear-gradient(rgba(255,255,255,.12)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,.1)_1px,transparent_1px)] [background-size:58px_58px]" />
-      <div className="absolute bottom-[-18%] right-[-8%] h-[430px] w-[430px] rounded-full bg-teal-400/20 blur-[110px]" />
-    </div>
+    <div className="ambient-light" />
   );
 }
 
@@ -347,9 +343,9 @@ function SiteNav() {
         <Logo />
       </a>
       <div className="nav-links" aria-label="Primary navigation">
+        <a href="/#trust">Trust</a>
         <a href="/#demo">Demo</a>
-        <a href="/#workflow">Workflow</a>
-        <a href="/#integration">API Mock</a>
+        <a href="/#workflow">How it works</a>
         <a href="/docs">Docs</a>
       </div>
       <a className="nav-cta" href="/#demo">
@@ -376,7 +372,7 @@ function Hero({ lockedValue, paidValue }) {
     <header id="top" className="hero-shell">
       <div className="vertical-note">POWERING POSSIBILITIES</div>
       <div className="hero-copy">
-        <div className="mb-4 flex items-center gap-2 text-sm text-teal-100/80">
+        <div className="hero-badge">
             <span className="grid size-8 place-items-center rounded-full border border-teal-300/25 bg-teal-400/15">
               <ShieldCheck size={16} />
             </span>
@@ -388,10 +384,15 @@ function Hero({ lockedValue, paidValue }) {
           <p className="mt-6 max-w-2xl text-base leading-7 text-slate-300 sm:text-lg">
             GigFi gives clients smart invoices and milestone escrow while artisans accept jobs on phones they already own.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="hero-action-row">
+            <label className="hero-email" aria-label="Demo email">
+              <input placeholder="Enter your email" defaultValue="" />
+            </label>
             <a className="premium-link" href="#demo">
-              Launch prototype <ArrowRight size={18} />
+              Launch Demo <ArrowRight size={18} />
             </a>
+          </div>
+          <div className="mt-4 flex flex-col gap-3 sm:flex-row">
             <a className="ghost-link" href="#workflow">See how it works</a>
           </div>
         </div>
@@ -419,6 +420,10 @@ function Hero({ lockedValue, paidValue }) {
           <Metric icon={<LockKeyhole size={18} />} label="Locked in escrow" value={currency(lockedValue)} />
           <Metric icon={<BanknoteArrowUp size={18} />} label="Released via ALAT" value={currency(paidValue)} />
             </div>
+          </div>
+          <div className="hero-card-prop">
+            <Logo />
+            <span>ESCROW CARD</span>
           </div>
         </div>
     </header>
@@ -1073,18 +1078,49 @@ function StatusList({ title, items, tone }) {
 function SiteFooter() {
   return (
     <footer className="site-footer">
-      <div>
-        <span className="brand-lockup">
+      <div className="footer-top">
+        <div>
           <Logo />
-        </span>
-        <p>Smart escrow, offline acceptance, and milestone payouts for informal service work.</p>
+          <p>Smart escrow, offline acceptance, and milestone payouts for informal service work.</p>
+        </div>
+        <div className="footer-store-buttons" aria-label="Prototype channels">
+          <span>Web Demo</span>
+          <span>USSD Ready</span>
+        </div>
       </div>
-      <div className="footer-links">
-        <a href="/docs">Docs</a>
-        <a href="https://github.com/0xNexuz/gigfi" target="_blank" rel="noreferrer">
-          <span aria-hidden="true">GH</span>
-          GitHub
-        </a>
+      <div className="footer-columns">
+        <div>
+          <h3>Product</h3>
+          <a href="/#demo">Create escrow</a>
+          <a href="/#trust">KYC simulation</a>
+          <a href="/#workflow">How it works</a>
+          <a href="/docs">Docs</a>
+        </div>
+        <div>
+          <h3>Platform</h3>
+          <a href="/#integration">ALAT adapter</a>
+          <a href="/#demo">Ledger</a>
+          <a href="/#demo">Disputes</a>
+          <a href="/#demo">Offline acceptance</a>
+        </div>
+        <div>
+          <h3>Company</h3>
+          <a href="/#cta">Pitch</a>
+          <a href="/#trust">Security model</a>
+          <a href="/#demo">Prototype</a>
+          <a href="https://github.com/0xNexuz/gigfi" target="_blank" rel="noreferrer">GitHub</a>
+        </div>
+        <div>
+          <h3>Contact</h3>
+          <a href="https://github.com/0xNexuz/gigfi" target="_blank" rel="noreferrer">github.com/0xNexuz/gigfi</a>
+          <a href="https://gigfi.vercel.app">gigfi.vercel.app</a>
+        </div>
+      </div>
+      <div className="footer-legal">
+        <p>
+          GigFi is a functional prototype. Escrow creation, wallet creation, transfers, identity checks, and SMS/USSD delivery are simulated unless real provider credentials are connected. The demo uses browser storage for persistence and an adapter module for future banking API routes.
+        </p>
+        <p>© 2026 GigFi. Built for informal service work, milestone protection, and offline-first payment trust.</p>
       </div>
     </footer>
   );
